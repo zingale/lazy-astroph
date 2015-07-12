@@ -105,7 +105,10 @@ class AstrophQuery(object):
 
 def doit():
 
-    keywords = ["supernova", "x-ray burst", "nova", "simulation", "code", "gpu", "flash", "castro", "maestro", "flame", "hydro", "MHD", "adaptive mesh refinement", "AMR"]
+    keywords = ["supernova", "x-ray burst", "nova", "progenitor",
+                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD",
+                "flame", "deflagration", "turbulence", "detonation", 
+                "adaptive mesh refinement", "AMR"]
     
     today = dt.date.today()
     oneday = dt.timedelta(days=1)
@@ -117,10 +120,11 @@ def doit():
 
     papers = q.do_query(keywords=keywords)
 
-    papers.sort()
+    papers.sort(reverse=True)
     
     for p in papers:
         print(p.title, p.keywords)
+        print(" ")
 
 if __name__ == "__main__":
     doit()
