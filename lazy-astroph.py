@@ -93,7 +93,7 @@ class AstrophQuery(object):
             # any keyword matches?
             keys_matched = []
             for k in keywords:
-                if k in abstract.lower().replace("\n", ""):
+                if k in abstract.lower().replace("\n", "") or k in title.lower():
                     keys_matched.append(k)
                     continue
 
@@ -106,7 +106,7 @@ class AstrophQuery(object):
 def doit():
 
     keywords = ["supernova", "x-ray burst", "nova", "progenitor",
-                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD",
+                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD", "anelastic", "low mach"
                 "flame", "deflagration", "turbulence", "detonation", 
                 "adaptive mesh refinement", "AMR"]
     
