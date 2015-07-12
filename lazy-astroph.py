@@ -5,8 +5,6 @@ import feedparser
 import sys
 import urllib
 
-
-
 # class to hold papers
 # sort on # of categories and then on names
 class Paper(object):
@@ -66,7 +64,7 @@ class AstrophQuery(object):
 
         return self.base_url + full_query
 
-    def do_query(self):
+    def do_query(self, keywords=None):
         response = urllib.urlopen(self.get_url()).read()
         response = response.replace("author", "contributor")
 
@@ -79,7 +77,7 @@ class AstrophQuery(object):
             sys.exit("no results found")
 
         results = []
-        
+
         for e in feed.entries:
 
             arxiv_id = e.id.split("/abs/")[-1]
@@ -90,12 +88,25 @@ class AstrophQuery(object):
                 if l.rel == "alternate":
                     url = l.href
 
-            results.append(Paper(arxiv_id, title, url, ""))
+            abstract = e.summary
+
+            # any keyword matches?
+            keys_matched = []
+            for k in keywords:
+                if k in abstract.lower().replace("\n", ""):
+                    keys_matched.append(k)
+                    continue
+
+            if len(keys_matched) > 0:
+                results.append(Paper(arxiv_id, title, url, keys_matched))
 
         return results
-    
+
+
 def doit():
 
+    keywords = ["supernova", "x-ray burst", "nova", "simulation", "code", "gpu", "flash", "castro", "maestro", "flame", "hydro", "MHD", "adaptive mesh refinement", "AMR"]
+    
     today = dt.date.today()
     oneday = dt.timedelta(days=1)
 
@@ -104,10 +115,12 @@ def doit():
     q = AstrophQuery(today - oneday, today)
     print(q.get_url())
 
-    papers = q.do_query()
+    papers = q.do_query(keywords=keywords)
 
-    for p in papers:
-        print(p.title)
+    papers.sort()
     
+    for p in papers:
+        print(p.title, p.keywords)
+
 if __name__ == "__main__":
     doit()
