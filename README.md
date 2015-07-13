@@ -15,6 +15,24 @@ important to us.
 where `inputs` is just a file of (case-insensitive) keywords, one per
 line.
 
+## automating
+
+To have this run nightly, add a line to your crontab.  Assuming that
+you've put the `lazy-astroph.py` script and an `inputs` file in your
+~/bin/, then do something like:
+
+```
+crontab -e
+```
+
+add a new line with:
+
+```
+00 04 * * * /home/username/bin/lazy-astroph.py -m me@something.edu /home/username/bin/inputs
+```
+
+replacing the e-mail with your e-mail and `username` with your username.
+
 
 # arXiv appearance dates
 
