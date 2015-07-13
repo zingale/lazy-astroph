@@ -94,6 +94,11 @@ class AstrophQuery(object):
             if latest_id is None:
                 latest_id = arxiv_id
 
+            # now check if we hit the old_id -- this is where we
+            # left off last time
+            if arxiv_id == old_id:
+                break
+
             # link
             for l in e.links:
                 if l.rel == "alternate":
@@ -121,21 +126,27 @@ def search_astroph(keywords, old_id=None):
 
     max_papers = 1000
 
-    q = AstrophQuery(today - 4*day, today, max_papers, old_id=old_id)
+    # we pick a wide-enough search range to ensure we catch papers
+    # if there is a holiday
+    q = AstrophQuery(today - 5*day, today, max_papers, old_id=old_id)
     print(q.get_url())
 
     papers, last_id = q.do_query(keywords=keywords)
 
     papers.sort(reverse=True)
 
+    # compose the body of our e-mail
+    body = ""
+
     current_kw = None
     for p in papers:
         if not p.kw_str() == current_kw:
             current_kw = p.kw_str()
-            print("keywords: {}\n".format(current_kw))
+            body += "\nkeywords: {}\n\n".format(current_kw)
 
-        print(p)
+        body += "{}\n".format(p)
 
+    print (body)
     return last_id
 
 
