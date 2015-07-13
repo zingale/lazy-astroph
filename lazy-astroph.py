@@ -16,7 +16,7 @@ class Paper(object):
         self.keywords = list(keywords)
 
     def __str__(self):
-        return "{} : {}\n  {}\n".format(self.arxiv_id, title, url)
+        return "{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
 
     def kw_str(self):
         return " ".join(self.keywords)
@@ -121,10 +121,14 @@ def doit():
     papers = q.do_query(keywords=keywords)
 
     papers.sort(reverse=True)
-    
+
+    current_kw = None
     for p in papers:
-        print(p.title, p.keywords)
-        print(" ")
+        if not p.kw_str() == current_kw:
+            current_kw = p.kw_str()
+            print("keywords: {}\n".format(current_kw))
+
+        print(p)
 
 if __name__ == "__main__":
     doit()
