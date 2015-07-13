@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import datetime as dt
 import feedparser
+import os
 import sys
 import urllib
 
@@ -30,12 +31,14 @@ class Paper(object):
 
 class AstrophQuery(object):
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, max_papers, old_id=None):
         self.start_date = start_date
         self.end_date = end_date
+        self.max_papers = max_papers
+        self.old_id = old_id
 
         self.base_url = "http://export.arxiv.org/api/query?"
-        self.sort_query = "max_results=1000&sortBy=submittedDate&sortOrder=descending"
+        self.sort_query = "max_results={}&sortBy=submittedDate&sortOrder=descending".format(self.max_papers)
 
         self.subcat = ["GA", "CO", "EP", "HE", "IM", "SR"]
 
@@ -78,10 +81,18 @@ class AstrophQuery(object):
 
         results = []
 
+        latest_id = None
+
         for e in feed.entries:
 
             arxiv_id = e.id.split("/abs/")[-1]
             title = e.title
+
+            # the papers are sorted now such that the first is the
+            # most recent -- we want to store this id, so the next
+            # time we run the script, we can pick up from here
+            if latest_id is None:
+                latest_id = arxiv_id
 
             # link
             for l in e.links:
@@ -100,25 +111,20 @@ class AstrophQuery(object):
             if len(keys_matched) > 0:
                 results.append(Paper(arxiv_id, title, url, keys_matched))
 
-        return results
+        return results, latest_id
 
 
-def doit():
+def search_astroph(keywords, old_id=None):
 
-    keywords = ["supernova", "x-ray burst", "nova", "progenitor",
-                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD", "anelastic", "low mach"
-                "flame", "deflagration", "turbulence", "detonation", 
-                "adaptive mesh refinement", "AMR"]
-    
     today = dt.date.today()
-    oneday = dt.timedelta(days=1)
+    day = dt.timedelta(days=1)
 
-    today -= 4*oneday
+    max_papers = 1000
 
-    q = AstrophQuery(today - oneday, today)
+    q = AstrophQuery(today - 4*day, today, max_papers, old_id=old_id)
     print(q.get_url())
 
-    papers = q.do_query(keywords=keywords)
+    papers, last_id = q.do_query(keywords=keywords)
 
     papers.sort(reverse=True)
 
@@ -130,5 +136,33 @@ def doit():
 
         print(p)
 
+    return last_id
+
+
 if __name__ == "__main__":
-    doit()
+
+    # have we done this before? if so, read the .lazy_astroph file to get
+    # the id of the paper we left off with
+    param_file = os.path.expanduser("~") + "/.lazy_astroph"
+    try: f = open(param_file, "r")
+    except:
+        old_id = None
+    else:
+        old_id = f.readline().rstrip()
+        f.close()
+
+    keywords = ["supernova", "x-ray burst", "nova", "progenitor",
+                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD", "anelastic", "low mach"
+                "flame", "deflagration", "turbulence", "detonation", 
+                "adaptive mesh refinement", "AMR"]    
+
+    last_id = search_astroph(keywords, old_id=old_id)
+
+    try: f = open(param_file, "w")
+    except:
+        sys.exit("ERROR: unable to open parameter file for writting")
+    else:
+        f.write(last_id)
+        f.close()
+
+
