@@ -9,7 +9,7 @@ import sys
 import urllib
 from email.mime.text import MIMEText
 
-# class to hold papers
+# class to hold a paper
 # sort on # of categories and then on names
 class Paper(object):
 
@@ -74,6 +74,8 @@ class AstrophQuery(object):
         response = urllib.urlopen(self.get_url()).read()
         response = response.replace("author", "contributor")
 
+        # this feedparser magic comes from the example of Julius Lucks / Andrea Zonca
+        # https://github.com/zonca/python-parse-arxiv/blob/master/python_arXiv_parsing_example.py
         feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
         feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
