@@ -1,10 +1,13 @@
 from __future__ import print_function
 
+import argparse
 import datetime as dt
 import feedparser
 import os
+import smtplib
 import sys
 import urllib
+from email.mime.text import MIMEText
 
 # class to hold papers
 # sort on # of categories and then on names
@@ -20,7 +23,7 @@ class Paper(object):
         return "{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
 
     def kw_str(self):
-        return " ".join(self.keywords)
+        return ", ".join(self.keywords)
 
     def __cmp__(self, other):
         if len(self.keywords) == len(other.keywords):
@@ -86,7 +89,7 @@ class AstrophQuery(object):
         for e in feed.entries:
 
             arxiv_id = e.id.split("/abs/")[-1]
-            title = e.title
+            title = e.title.replace("\n","")
 
             # the papers are sorted now such that the first is the
             # most recent -- we want to store this id, so the next
@@ -119,7 +122,21 @@ class AstrophQuery(object):
         return results, latest_id
 
 
-def search_astroph(keywords, old_id=None):
+def report(body, subject, sender, receiver):
+    """ send an email """
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = receiver
+
+    try:
+        smtpObj = smtplib.SMTP('localhost')
+        smtpObj.sendmail(sender, receiver, msg.as_string())
+    except smtp.SMTPException:
+        sys.exit("ERROR sending mail")
+
+
+def search_astroph(keywords, old_id=None, mail=None):
 
     today = dt.date.today()
     day = dt.timedelta(days=1)
@@ -146,11 +163,25 @@ def search_astroph(keywords, old_id=None):
 
         body += "{}\n".format(p)
 
-    print (body)
+    # e-mail it
+    if not mail is None:
+        report(body, "astro-ph papers of interest", 
+               "lazy-astroph@localhost <lazy-astroph search>", mail)
+    else:
+        print(body)
+
     return last_id
 
 
 if __name__ == "__main__":
+
+    # parse runtime parameters
+    parser = argparse.ArgumentParser()                                                                            
+
+    parser.add_argument("-m", help="e-mail address to send report to", 
+                        type=str, default=None)
+
+    args = parser.parse_args()
 
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with
@@ -164,10 +195,10 @@ if __name__ == "__main__":
 
     keywords = ["supernova", "x-ray burst", "nova", "progenitor",
                 "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD", "anelastic", "low mach"
-                "flame", "deflagration", "turbulence", "detonation", 
-                "adaptive mesh refinement", "AMR"]    
+                "flame", "deflagration", "turbulence", "detonation",
+                "adaptive mesh refinement", "AMR"]
 
-    last_id = search_astroph(keywords, old_id=old_id)
+    last_id = search_astroph(keywords, old_id=old_id, mail=args.m)
 
     try: f = open(param_file, "w")
     except:
@@ -175,5 +206,3 @@ if __name__ == "__main__":
     else:
         f.write(last_id)
         f.close()
-
-
