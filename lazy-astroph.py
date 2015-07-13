@@ -180,8 +180,19 @@ if __name__ == "__main__":
 
     parser.add_argument("-m", help="e-mail address to send report to", 
                         type=str, default=None)
+    parser.add_argument("inputs", help="inputs file containing keywords",
+                        type=str, nargs=1)
 
     args = parser.parse_args()
+
+    # get the keywords
+    keywords = []
+    try: f = open(args.inputs[0], "r")
+    except:
+        sys.exit("ERROR: unable to open inputs file")
+    else:
+        for line in f:
+            keywords.append(line.lower().rstrip())
 
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with
@@ -192,11 +203,6 @@ if __name__ == "__main__":
     else:
         old_id = f.readline().rstrip()
         f.close()
-
-    keywords = ["supernova", "x-ray burst", "nova", "progenitor",
-                "code", "gpu", "flash", "castro", "maestro", "hydro", "MHD", "anelastic", "low mach"
-                "flame", "deflagration", "turbulence", "detonation",
-                "adaptive mesh refinement", "AMR"]
 
     last_id = search_astroph(keywords, old_id=old_id, mail=args.m)
 

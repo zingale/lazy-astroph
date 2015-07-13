@@ -6,6 +6,15 @@ of the papers matching those keys.  This way if we forget to read
 astro-ph for a bit, we can atleast get notified of the papers deemed
 important to us.
 
+## usage
+
+```
+./lazy-astroph.py -m e-mail-address inputs
+```
+
+where `inputs` is just a file of (case-insensitive) keywords, one per
+line.
+
 
 # arXiv appearance dates
 
