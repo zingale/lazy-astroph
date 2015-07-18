@@ -168,11 +168,12 @@ def search_astroph(keywords, old_id=None, mail=None):
         body += "{}\n".format(p)
 
     # e-mail it
-    if not mail is None:
-        report(body, "astro-ph papers of interest", 
-               "lazy-astroph@localhost <lazy-astroph search>", mail)
-    else:
-        print(body)
+    if not len(results) == 0:
+        if not mail is None:
+            report(body, "astro-ph papers of interest",
+                   "lazy-astroph@localhost <lazy-astroph search>", mail)
+        else:
+            print(body)
 
     return last_id
 
@@ -180,9 +181,9 @@ def search_astroph(keywords, old_id=None, mail=None):
 if __name__ == "__main__":
 
     # parse runtime parameters
-    parser = argparse.ArgumentParser()                                                                            
+    parser = argparse.ArgumentParser()
 
-    parser.add_argument("-m", help="e-mail address to send report to", 
+    parser.add_argument("-m", help="e-mail address to send report to",
                         type=str, default=None)
     parser.add_argument("inputs", help="inputs file containing keywords",
                         type=str, nargs=1)
