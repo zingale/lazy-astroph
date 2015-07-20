@@ -22,7 +22,7 @@ class Paper(object):
         self.keywords = list(keywords)
 
     def __str__(self):
-        return "{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
+        return u"{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
 
     def kw_str(self):
         return ", ".join(self.keywords)
@@ -165,12 +165,12 @@ def search_astroph(keywords, old_id=None, mail=None):
             current_kw = p.kw_str()
             body += "\nkeywords: {}\n\n".format(current_kw)
 
-        body += "{}\n".format(p)
+        body += u"{}\n".format(p)
 
     # e-mail it
-    if not len(results) == 0:
+    if not len(papers) == 0:
         if not mail is None:
-            report(body, "astro-ph papers of interest",
+            report(body.encode("ascii","replace"), "astro-ph papers of interest",
                    "lazy-astroph@localhost <lazy-astroph search>", mail)
         else:
             print(body)
