@@ -1,0 +1,2 @@
+-- we could encode the e-mails as Unicode instead of the ASCII default
+   by adding 'utf-8' to MIMEText
