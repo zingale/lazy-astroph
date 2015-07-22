@@ -13,7 +13,17 @@ important to us.
 ```
 
 where `inputs` is just a file of (case-insensitive) keywords, one per
-line.
+line.  Note, ending a keyword with "-" will make sure that keyword
+is uniquely matched, and not embedded in another keyword.  E.g.,
+
+```
+supernova
+nova-
+```
+
+will return the matching papers containing "supernova" as well as
+those that contain "nova" distinct from "supernova" (since `"nova" in
+"supernova"` is `True` in python)
 
 ## automating
 

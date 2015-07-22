@@ -114,11 +114,22 @@ class AstrophQuery(object):
             abstract = e.summary
 
             # any keyword matches?
+            # we do two types of matches here.  If the keyword tuple has the "any"
+            # qualifier, then we don't care how it appears in the text, but if
+            # it has "unique", then we want to make sure only that word matches,
+            # i.e., "nova" and not "supernova"
             keys_matched = []
-            for k in keywords:
-                if k in abstract.lower().replace("\n", "") or k in title.lower():
-                    keys_matched.append(k)
-                    continue
+            for k, type in keywords:
+                if type == "any":
+                    if k in abstract.lower().replace("\n", "") or k in title.lower():
+                        keys_matched.append(k)
+                        continue
+                elif type == "unique":
+                    qa = [l.lower().strip('\":.,!?') for l in abstract.split()]
+                    qt = [l.lower().strip('\":.,!?') for l in title.split()]
+                    if k in qa + qt:
+                        keys_matched.append(k)
+                        continue
 
             if len(keys_matched) > 0:
                 results.append(Paper(arxiv_id, title, url, keys_matched))
@@ -197,7 +208,11 @@ if __name__ == "__main__":
         sys.exit("ERROR: unable to open inputs file")
     else:
         for line in f:
-            keywords.append(line.lower().rstrip())
+            l = line.lower().rstrip()
+            if l[len(l)-1] == "-":
+                keywords.append((l[:len(l)-1], "unique"))
+            else:
+                keywords.append((l, "any"))
 
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with
