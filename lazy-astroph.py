@@ -102,9 +102,11 @@ class AstrophQuery(object):
                 latest_id = arxiv_id
 
             # now check if we hit the old_id -- this is where we
-            # left off last time
-            if arxiv_id == old_id:
-                break
+            # left off last time.  Note things may not be in id order,
+            # so we keep looking through the entire list of returned
+            # results.
+            if arxiv_id < old_id:
+                continue
 
             # link
             for l in e.links:
@@ -160,7 +162,12 @@ def search_astroph(keywords, old_id=None, mail=None):
 
     # we pick a wide-enough search range to ensure we catch papers
     # if there is a holiday
-    q = AstrophQuery(today - 5*day, today, max_papers, old_id=old_id)
+
+    # also, something wierd happens -- the arxiv ids appear to be
+    # in descending order if you look at the "pastweek" listing
+    # but the submission dates can vary wildly.  It seems that some
+    # papers are held for a week or more before appearing.  
+    q = AstrophQuery(today - 10*day, today, max_papers, old_id=old_id)
     print(q.get_url())
 
     papers, last_id = q.do_query(keywords=keywords)
