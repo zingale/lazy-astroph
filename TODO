@@ -1,2 +1,6 @@
 -- we could encode the e-mails as Unicode instead of the ASCII default
    by adding 'utf-8' to MIMEText
+
+-- we need to deal with the line breaks more smartly.  Currently we replace
+   "\n" with "", but that concatenates words.  If we replace with " ", then
+   it potentially breaks up hyphenated words...
