@@ -5,8 +5,11 @@ from __future__ import print_function
 import argparse
 import datetime as dt
 import feedparser
+import json
 import os
+import shlex
 import smtplib
+import subprocess
 import sys
 import urllib
 from email.mime.text import MIMEText
@@ -176,7 +179,7 @@ def report(body, subject, sender, receiver):
         sys.exit("ERROR sending mail")
 
 
-def search_astroph(keywords, old_id=None, mail=None):
+def search_astroph(keywords, old_id=None):
 
     today = dt.date.today()
     day = dt.timedelta(days=1)
@@ -197,9 +200,15 @@ def search_astroph(keywords, old_id=None, mail=None):
 
     papers.sort(reverse=True)
 
+    return papers, last_id
+
+
+def send_email(papers, mail=None):
+
     # compose the body of our e-mail
     body = ""
 
+    # sort papers by keywords
     current_kw = None
     for p in papers:
         if not p.kw_str() == current_kw:
@@ -216,8 +225,42 @@ def search_astroph(keywords, old_id=None, mail=None):
         else:
             print(body)
 
-    return last_id
 
+def run(string):
+
+    # shlex.split will preserve inner quotes
+    prog = shlex.split(string)
+    p0 = subprocess.Popen(prog, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT)
+
+    stdout0, stderr0 = p0.communicate()
+    rc = p0.returncode
+    p0.stdout.close()
+
+    return stdout0, stderr0, rc
+
+
+def slack_post(papers, channel_req, webhook=None):
+
+    # loop by channel
+    for c in channel_req:
+        channel_body = ""
+        for p in papers:
+            if c in p.channels:
+                if len(p.keywords) >= channel_req[c]:
+                    channel_body += u"{}\n".format(p)
+
+        if webhook is None:
+            print("channel: {}".format(c))
+            print(channel_body)        
+            continue
+
+        payload = {}
+        payload["channel"] = c
+        payload["text"] = channel_body
+
+        cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
+        so = run(cmd)
 
 if __name__ == "__main__":
 
@@ -228,6 +271,8 @@ if __name__ == "__main__":
                         type=str, default=None)
     parser.add_argument("inputs", help="inputs file containing keywords",
                         type=str, nargs=1)
+    parser.add_argument("-w", help="file containing slack webhook URL",
+                        type=str, default=None)
 
     args = parser.parse_args()
 
@@ -285,7 +330,18 @@ if __name__ == "__main__":
         old_id = f.readline().rstrip()
         f.close()
 
-    last_id = search_astroph(keywords, old_id=old_id, mail=args.m)
+    papers, last_id = search_astroph(keywords, old_id=old_id)
+
+    send_email(papers, mail=args.m)
+
+    if not args.w is None:
+        try: f = open(args.w)
+        except: sys.exit("ERROR: unable to open webhook file")
+
+        webhook = str(f.readline())
+        f.close()
+
+    slack_post(papers, channel_req, webhook=webhook)
 
     try: f = open(param_file, "w")
     except:
