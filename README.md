@@ -1,29 +1,47 @@
 # about lazy-astroph.py
 
-This is a simple script to get the latest papers from astro-ph/arxiv
-and search their abstracts and titles for keywords and mail a report
-of the papers matching those keys.  This way if we forget to read
+This is a simple script to get the latest papers from astro-ph/arxiv,
+search their abstracts and titles for keywords, and report the
+results.  Reports are done either through e-mail or by posting to
+slack channels using web-hooks.  This way if we forget to read
 astro-ph for a bit, we can atleast get notified of the papers deemed
-important to us.
+important to us (and discuss them on slack).
 
 ## usage
 
 ```
-./lazy-astroph.py -m e-mail-address inputs
+./lazy-astroph.py [-m e-mail-address] [-w slack-webhook-file] inputs
 ```
 
-where `inputs` is just a file of (case-insensitive) keywords, one per
+where `inputs` is a file of (case-insensitive) keywords, one per
 line.  Note, ending a keyword with "-" will make sure that keyword
-is uniquely matched, and not embedded in another keyword.  E.g.,
+is uniquely matched, and not embedded in another keyword.  Adding
+a clause "NOT:" to a keyword line followed by common-separated
+terms will result in a match only if the terms following NOT are
+not found
+
+E.g.,
 
 ```
-supernova
+supernova               NOT: dark energy, interstellar medium, ISM
 nova-
+xrb
 ```
 
-will return the matching papers containing "supernova" as well as
-those that contain "nova" distinct from "supernova" (since `"nova" in
-"supernova"` is `True` in python)
+will return the matching papers containing "supernova", so long as
+they don't also contain "dark energy", "interstellar medium", or
+"ISM".  It will also return papers that contain "nova" distinct from
+"supernova" (since `"nova" in "supernova"` is `True` in python).
+And it will return those papers containing xrb.
+
+Slack channels are indicated by a line beginning with "#", with
+an optional "requires=N", where N is the number of keywords
+we must match before posting a paper to a slack channel.
+
+You need to create a webhook via slack.  Put the URL into a file
+(just the URL, nothing else) and then pass the name of that
+file into `lazy-astroph.py` using the `-w` parameter.
+
 
 ## automating
 
