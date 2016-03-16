@@ -147,9 +147,9 @@ def report(body, subject, sender, receiver):
     msg['To'] = receiver
 
     try:
-        smtpObj = smtplib.SMTP('localhost')
-        smtpObj.sendmail(sender, receiver, msg.as_string())
-    except smtp.SMTPException:
+        sm = smtplib.SMTP('localhost')
+        sm.sendmail(sender, receiver, msg.as_string())
+    except smtplib.SMTPException:
         sys.exit("ERROR sending mail")
 
 
