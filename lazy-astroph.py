@@ -15,14 +15,15 @@ from email.mime.text import MIMEText
 # sort on # of categories and then on names
 class Paper(object):
 
-    def __init__(self, arxiv_id, title, url, keywords):
+    def __init__(self, arxiv_id, title, url, keywords, channels):
         self.arxiv_id = arxiv_id
         self.title = title
         self.url = url
         self.keywords = list(keywords)
+        self.channels = list(set(channels))
 
     def __str__(self):
-        return u"{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
+        return u"{} : {}\n  {} (channels: {})\n".format(self.arxiv_id, self.title, self.url, self.channels)
 
     def kw_str(self):
         return ", ".join(self.keywords)
@@ -33,6 +34,17 @@ class Paper(object):
         else:
             return cmp(len(self.keywords), len(other.keywords))
 
+class Keyword(object):
+
+    def __init__(self, name, matching="any", channel=None, excludes=None):
+        self.name = name
+        self.matching = matching
+        self.channel = channel
+        self.excludes = list(set(excludes))
+
+    def __str__(self):
+        return "{}: matching={}, channel={}, NOTs={}".format(
+            self.name, self.matching, self.channel, self.excludes)
 
 class AstrophQuery(object):
 
@@ -121,20 +133,31 @@ class AstrophQuery(object):
             # it has "unique", then we want to make sure only that word matches,
             # i.e., "nova" and not "supernova"
             keys_matched = []
-            for k, type in keywords:
-                if type == "any":
-                    if k in abstract.lower().replace("\n", "") or k in title.lower():
-                        keys_matched.append(k)
-                        continue
-                elif type == "unique":
+            channels = []
+            for k in keywords:
+                # first check the "NOT"s
+                excluded = False
+                for n in k.excludes:
+                    if n in abstract.lower().replace("\n", "") or n in title.lower():
+                        # we've matched one of the excludes
+                        excluded = True
+
+                if excluded: continue
+
+                if k.matching == "any":
+                    if k.name in abstract.lower().replace("\n", "") or k.name in title.lower():
+                        keys_matched.append(k.name)
+                        channels.append(k.channel)
+
+                elif k.matching == "unique":
                     qa = [l.lower().strip('\":.,!?') for l in abstract.split()]
                     qt = [l.lower().strip('\":.,!?') for l in title.split()]
-                    if k in qa + qt:
-                        keys_matched.append(k)
-                        continue
+                    if k.name in qa + qt:
+                        keys_matched.append(k.name)
+                        channels.append(k.channel)
 
             if len(keys_matched) > 0:
-                results.append(Paper(arxiv_id, title, url, keys_matched))
+                results.append(Paper(arxiv_id, title, url, keys_matched, channels))
 
         return results, latest_id
 
@@ -214,12 +237,43 @@ if __name__ == "__main__":
     except:
         sys.exit("ERROR: unable to open inputs file")
     else:
+        channel = None
+        channel_req = {}
         for line in f:
             l = line.lower().rstrip()
-            if l[len(l)-1] == "-":
-                keywords.append((l[:len(l)-1], "unique"))
+
+            if l == "":
+                continue
+
+            elif l.startswith("#"):
+                # this line defines a channel
+                ch = l.split()
+                channel = ch[0]
+                if len(ch) == 2:
+                    requires = int(ch[1].split("=")[1])
+                else:
+                    requires = 1
+                channel_req[channel] = requires
+
             else:
-                keywords.append((l, "any"))
+                # this line has a keyword (and optional NOT keywords)
+                if "not:" in l:
+                    kw, nots = l.split("not:")
+                    kw = kw.strip()
+                    excludes = [x.strip() for x in nots.split(",")]
+                else:
+                    kw = l.strip()
+                    excludes = []
+
+                if kw[len(kw)-1] == "-":
+                    matching = "unique"
+                    kw = kw[:len(kw)-1]
+                else:
+                    matching = "any"
+
+                keywords.append(Keyword(kw, matching=matching,
+                                        channel=channel, excludes=excludes))
+
 
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with

@@ -1,31 +1,58 @@
-supernova
+#sne require=2 
+supernova               NOT: dark energy, interstellar medium, ISM, redshift, cosmic microwave, CMB, cosmology
+type Ia supernova
 SNIa
 SN Ia
 SNe Ia
 Chandrasekhar
-degenerate
+degenerate              NOT: CMB, lensing, doped
+supernova progenitor
+flame
+deflagration
+turbulence              NOT: cluster, interstellar, ISM, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
+detonation
+
+#wdmerger 
+white dwarf merger
+WD merger
+merger                  NOT: cluster, black hole, molecular cloud, galaxy
+
+#xrb
 x-ray burst
+xrb
+thin shell instability
+thin-shell instability
 nova-
-progenitor
-code
-software
-python
+
+#gpu
+CUDA
 gpu
+openacc
+
+#hydro 
 flash
 castro
 maestro
-hydro
+hydro                   NOT: galaxy, galaxies, cosmology, large scale structure, large-scale structure, dust, cloud, interstellar medium, ISM, interstellar, jets, general relativity, general relativistic, hydrogen, hydrostatic, Lyman
 magnetohydrodynamics
 MHD
 anelastic
 low mach
-flame
-deflagration
-turbulence
-detonation
 adaptive mesh refinement
 AMR
-radiative transfer
 RHD
 radiation hydrodynamics
+convection
+convective              NOT: dust, cloud
+rayleigh-taylor
+kelvin-helmholtz
+
+#random require=2
+code                    NOT: photometry, telescope, spectrograph, spectra, galaxy, galaxies, dark matter, dark energy, large scale structure, large-scale structure
+software                NOT: surveys
+python
 open source
+
+
+
+
