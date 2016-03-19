@@ -14,10 +14,11 @@ import sys
 import urllib
 from email.mime.text import MIMEText
 
-# class to hold a paper
-# sort on # of categories and then on names
 class Paper(object):
-
+    """a Paper is a single paper listed on arXiv.  In addition to the
+       paper's title, ID, and URL (obtained from arXiv), we also store
+       which keywords it matched and which Slack channel it should go
+       to"""
     def __init__(self, arxiv_id, title, url, keywords, channels):
         self.arxiv_id = arxiv_id
         self.title = title
@@ -32,13 +33,19 @@ class Paper(object):
         return ", ".join(self.keywords)
 
     def __cmp__(self, other):
+        """we compare Papers by the number of keywords, and then
+           alphabetically by the union of their keywords"""
+
+
         if len(self.keywords) == len(other.keywords):
             return cmp(self.kw_str(), other.kw_str())
         else:
             return cmp(len(self.keywords), len(other.keywords))
 
 class Keyword(object):
-
+    """a Keyword includes: the text we should match, how the matching
+       should be done (unique or any), which words, if present, negate
+       the match, and what Slack channel this keyword is associated with"""
     def __init__(self, name, matching="any", channel=None, excludes=None):
         self.name = name
         self.matching = matching
@@ -75,6 +82,7 @@ class AstrophQuery(object):
         return cat_query
 
     def get_range_query(self):
+        # here the 2000 on each date is 8:00pm
         range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"), self.end_date.strftime("%Y%m%d"))
         range_query = "lastUpdatedDate:{}".format(range_str)
         return range_query
@@ -108,7 +116,7 @@ class AstrophQuery(object):
         for e in feed.entries:
 
             arxiv_id = e.id.split("/abs/")[-1]
-            title = e.title.replace("\n","")
+            title = e.title.replace("\n"," ")
 
             # the papers are sorted now such that the first is the
             # most recent -- we want to store this id, so the next
@@ -134,21 +142,22 @@ class AstrophQuery(object):
             # we do two types of matches here.  If the keyword tuple has the "any"
             # qualifier, then we don't care how it appears in the text, but if
             # it has "unique", then we want to make sure only that word matches,
-            # i.e., "nova" and not "supernova"
+            # i.e., "nova" and not "supernova".  If any of the exclude words associated
+            # with the keyword are present, then we reject any match
             keys_matched = []
             channels = []
             for k in keywords:
                 # first check the "NOT"s
                 excluded = False
                 for n in k.excludes:
-                    if n in abstract.lower().replace("\n", "") or n in title.lower():
+                    if n in abstract.lower().replace("\n", " ") or n in title.lower():
                         # we've matched one of the excludes
                         excluded = True
 
                 if excluded: continue
 
                 if k.matching == "any":
-                    if k.name in abstract.lower().replace("\n", "") or k.name in title.lower():
+                    if k.name in abstract.lower().replace("\n", " ") or k.name in title.lower():
                         keys_matched.append(k.name)
                         channels.append(k.channel)
 
@@ -180,6 +189,8 @@ def report(body, subject, sender, receiver):
 
 
 def search_astroph(keywords, old_id=None):
+    """ do the actual search though astro-ph by first querying astro-ph
+        for the latest papers and then looking for keyword matches"""
 
     today = dt.date.today()
     day = dt.timedelta(days=1)
@@ -227,6 +238,7 @@ def send_email(papers, mail=None):
 
 
 def run(string):
+    """ run a UNIX command """
 
     # shlex.split will preserve inner quotes
     prog = shlex.split(string)

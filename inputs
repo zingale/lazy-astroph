@@ -6,10 +6,9 @@ SN Ia
 SNe Ia
 Chandrasekhar
 degenerate              NOT: CMB, lensing, doped
-supernova progenitor
+progenitor
 flame
 deflagration
-turbulence              NOT: cluster, interstellar, ISM, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
 detonation
 
 #wdmerger 
@@ -46,6 +45,8 @@ convection
 convective              NOT: dust, cloud
 rayleigh-taylor
 kelvin-helmholtz
+turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
+
 
 #random require=2
 code                    NOT: photometry, telescope, spectrograph, spectra, galaxy, galaxies, dark matter, dark energy, large scale structure, large-scale structure
