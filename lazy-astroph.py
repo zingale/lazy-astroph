@@ -25,6 +25,7 @@ class Paper(object):
         self.url = url
         self.keywords = list(keywords)
         self.channels = list(set(channels))
+        self.posted_to_slack = 0
 
     def __str__(self):
         return u"{} : {}\n  {} (channels: {})\n".format(self.arxiv_id, self.title, self.url, self.channels)
@@ -258,9 +259,11 @@ def slack_post(papers, channel_req, webhook=None):
     for c in channel_req:
         channel_body = ""
         for p in papers:
-            if c in p.channels:
-                if len(p.keywords) >= channel_req[c]:
-                    channel_body += u"{}\n".format(p)
+            if not p.posted_to_slack:
+                if c in p.channels:
+                    if len(p.keywords) >= channel_req[c]:
+                        channel_body += u"{}\n".format(p)
+                        p.posted_to_slack = 1
 
         if webhook is None:
             print("channel: {}".format(c))
