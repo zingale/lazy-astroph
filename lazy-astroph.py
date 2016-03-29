@@ -21,14 +21,14 @@ class Paper(object):
        to"""
     def __init__(self, arxiv_id, title, url, keywords, channels):
         self.arxiv_id = arxiv_id
-        self.title = title
+        self.title = title.replace("'", r"")
         self.url = url
         self.keywords = list(keywords)
         self.channels = list(set(channels))
         self.posted_to_slack = 0
 
     def __str__(self):
-        return u"{} : {}\n  {} (channels: {})\n".format(self.arxiv_id, self.title, self.url, self.channels)
+        return u"{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
 
     def kw_str(self):
         return ", ".join(self.keywords)
