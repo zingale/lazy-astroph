@@ -28,7 +28,8 @@ class Paper(object):
         self.posted_to_slack = 0
 
     def __str__(self):
-        return u"{} : {}\n  {}\n".format(self.arxiv_id, self.title, self.url)
+        t = " ".join(self.title.split())  # remove extra spaces
+        return u"{} : {}\n  {}\n".format(self.arxiv_id, t, self.url)
 
     def kw_str(self):
         return ", ".join(self.keywords)
