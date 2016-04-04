@@ -46,6 +46,7 @@ convective              NOT: dust, cloud
 rayleigh-taylor
 kelvin-helmholtz
 turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
+shock
 
 
 #random require=2
