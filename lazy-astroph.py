@@ -356,6 +356,8 @@ if __name__ == "__main__":
 
         webhook = str(f.readline())
         f.close()
+    else:
+        webhook = None
 
     slack_post(papers, channel_req, webhook=webhook)
 
