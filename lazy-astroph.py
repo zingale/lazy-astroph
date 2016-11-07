@@ -11,7 +11,13 @@ import shlex
 import smtplib
 import subprocess
 import sys
-import urllib
+
+# python 2 and 3 do different things with urllib
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
+
 from email.mime.text import MIMEText
 
 class Paper(object):
@@ -98,8 +104,9 @@ class AstrophQuery(object):
         return self.base_url + full_query
 
     def do_query(self, keywords=None):
-        response = urllib.urlopen(self.get_url()).read()
-        response = response.replace("author", "contributor")
+        # note, in python3 this will be bytes not str
+        response = urlopen(self.get_url()).read()
+        response = response.replace(b"author", b"contributor")
 
         # this feedparser magic comes from the example of Julius Lucks / Andrea Zonca
         # https://github.com/zonca/python-parse-arxiv/blob/master/python_arXiv_parsing_example.py
