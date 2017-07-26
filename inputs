@@ -10,11 +10,14 @@ progenitor
 flame
 deflagration
 detonation
+shell
+helium detonation
 
 #wdmerger 
 white dwarf merger
 WD merger
 double degenerate
+tidal disruption
 
 #xrb
 x-ray burst
@@ -22,11 +25,13 @@ xrb
 thin shell instability
 thin-shell instability
 nova-
+superburst
 
 #gpu
 CUDA
 gpu
 openacc
+KNL
 
 #hydro 
 flash
@@ -47,13 +52,14 @@ rayleigh-taylor
 kelvin-helmholtz
 turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
 shock
-
+well-balanced
 
 #random require=2
 code                    NOT: photometry, telescope, spectrograph, spectra, galaxy, galaxies, dark matter, dark energy, large scale structure, large-scale structure
 software                NOT: surveys
 python
 open source
+jupyter
 
 
 
