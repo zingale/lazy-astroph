@@ -53,6 +53,8 @@ kelvin-helmholtz
 turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
 shock
 well-balanced
+rotation                NOT: galaxy, cluster, disk
+rotating                NOT: galaxy, cluster, disk
 
 #random require=2
 code                    NOT: photometry, telescope, spectrograph, spectra, galaxy, galaxies, dark matter, dark energy, large scale structure, large-scale structure
