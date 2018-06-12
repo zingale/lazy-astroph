@@ -6,7 +6,7 @@ SN Ia
 SNe Ia
 Chandrasekhar
 degenerate              NOT: CMB, lensing, doped
-progenitor
+progenitor              NOT: asteroid, basaltic, jupiter
 flame
 deflagration
 detonation
@@ -56,7 +56,7 @@ kelvin-helmholtz
 turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
 shock
 well-balanced
-rotation                NOT: galaxy, cluster, disk
+rotation                NOT: galaxy, cluster, disk, hubble, quantum, spectrum
 rotating                NOT: galaxy, cluster, disk
 fluid dynamics
 CFL
