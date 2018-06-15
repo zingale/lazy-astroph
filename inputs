@@ -10,7 +10,7 @@ progenitor              NOT: asteroid, basaltic, jupiter
 flame
 deflagration
 detonation
-shell
+shell                   NOT: lens, refractive
 helium detonation
 urca-
 thermonuclear
