@@ -4,21 +4,21 @@ from __future__ import print_function
 
 import argparse
 import datetime as dt
-import feedparser
 import json
 import os
 import shlex
 import smtplib
 import subprocess
 import sys
+from email.mime.text import MIMEText
+
+import feedparser
 
 # python 2 and 3 do different things with urllib
 try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
-
-from email.mime.text import MIMEText
 
 class Paper(object):
     """a Paper is a single paper listed on arXiv.  In addition to the
@@ -38,17 +38,17 @@ class Paper(object):
         return u"{} : {}\n  {}\n".format(self.arxiv_id, t, self.url)
 
     def kw_str(self):
+        """ return the union of keywords """
         return ", ".join(self.keywords)
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         """we compare Papers by the number of keywords, and then
            alphabetically by the union of their keywords"""
 
-
         if len(self.keywords) == len(other.keywords):
-            return cmp(self.kw_str(), other.kw_str())
+            return self.kw_str() < other.kw_str()
         else:
-            return cmp(len(self.keywords), len(other.keywords))
+            return len(self.keywords) < len(other.keywords)
 
 class Keyword(object):
     """a Keyword includes: the text we should match, how the matching
@@ -65,6 +65,7 @@ class Keyword(object):
             self.name, self.matching, self.channel, self.excludes)
 
 class AstrophQuery(object):
+    """ a class to define a query to the arXiv astroph papers """
 
     def __init__(self, start_date, end_date, max_papers, old_id=None):
         self.start_date = start_date
@@ -78,6 +79,7 @@ class AstrophQuery(object):
         self.subcat = ["GA", "CO", "EP", "HE", "IM", "SR"]
 
     def get_cat_query(self):
+        """ create the category portion of the astro ph query """
 
         cat_query = "%28" # open parenthesis
         for n, s in enumerate(self.subcat):
@@ -90,12 +92,16 @@ class AstrophQuery(object):
         return cat_query
 
     def get_range_query(self):
+        """ get the query string for the date range """
+
         # here the 2000 on each date is 8:00pm
         range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"), self.end_date.strftime("%Y%m%d"))
         range_query = "lastUpdatedDate:{}".format(range_str)
         return range_query
 
     def get_url(self):
+        """ create the URL we will use to query arXiv """
+
         cat_query = self.get_cat_query()
         range_query = self.get_range_query()
 
@@ -103,7 +109,9 @@ class AstrophQuery(object):
 
         return self.base_url + full_query
 
-    def do_query(self, keywords=None):
+    def do_query(self, keywords=None, old_id=None):
+        """ perform the actual query """
+
         # note, in python3 this will be bytes not str
         response = urlopen(self.get_url()).read()
         response = response.replace(b"author", b"contributor")
@@ -212,11 +220,11 @@ def search_astroph(keywords, old_id=None):
     # also, something wierd happens -- the arxiv ids appear to be
     # in descending order if you look at the "pastweek" listing
     # but the submission dates can vary wildly.  It seems that some
-    # papers are held for a week or more before appearing.  
+    # papers are held for a week or more before appearing.
     q = AstrophQuery(today - 10*day, today, max_papers, old_id=old_id)
     print(q.get_url())
 
-    papers, last_id = q.do_query(keywords=keywords)
+    papers, last_id = q.do_query(keywords=keywords, old_id=old_id)
 
     papers.sort(reverse=True)
 
@@ -262,6 +270,7 @@ def run(string):
 
 
 def slack_post(papers, channel_req, webhook=None):
+    """ post the information to a slack channel """
 
     # loop by channel
     for c in channel_req:
@@ -270,12 +279,13 @@ def slack_post(papers, channel_req, webhook=None):
             if not p.posted_to_slack:
                 if c in p.channels:
                     if len(p.keywords) >= channel_req[c]:
-                        channel_body += u"{}\n".format(p)
+                        keywds = " ".join(p.keywords).strip()
+                        channel_body += u"{} [{}]\n".format(p, keywds)
                         p.posted_to_slack = 1
 
         if webhook is None:
             print("channel: {}".format(c))
-            print(channel_body)        
+            print(channel_body)
             continue
 
         payload = {}
@@ -285,7 +295,8 @@ def slack_post(papers, channel_req, webhook=None):
         cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
         so = run(cmd)
 
-if __name__ == "__main__":
+def doit():
+    """ the main driver for the lazy-astroph script """
 
     # parse runtime parameters
     parser = argparse.ArgumentParser()
@@ -301,7 +312,8 @@ if __name__ == "__main__":
 
     # get the keywords
     keywords = []
-    try: f = open(args.inputs[0], "r")
+    try:
+        f = open(args.inputs[0], "r")
     except:
         sys.exit("ERROR: unable to open inputs file")
     else:
@@ -346,7 +358,8 @@ if __name__ == "__main__":
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with
     param_file = os.path.expanduser("~") + "/.lazy_astroph"
-    try: f = open(param_file, "r")
+    try:
+        f = open(param_file, "r")
     except:
         old_id = None
     else:
@@ -358,8 +371,10 @@ if __name__ == "__main__":
     send_email(papers, mail=args.m)
 
     if not args.w is None:
-        try: f = open(args.w)
-        except: sys.exit("ERROR: unable to open webhook file")
+        try:
+            f = open(args.w)
+        except:
+            sys.exit("ERROR: unable to open webhook file")
 
         webhook = str(f.readline())
         f.close()
@@ -368,9 +383,14 @@ if __name__ == "__main__":
 
     slack_post(papers, channel_req, webhook=webhook)
 
-    try: f = open(param_file, "w")
+    try:
+        f = open(param_file, "w")
     except:
         sys.exit("ERROR: unable to open parameter file for writting")
     else:
         f.write(last_id)
         f.close()
+
+
+if __name__ == "__main__":
+    doit()

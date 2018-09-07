@@ -36,7 +36,7 @@ gpu
 openacc
 KNL
 
-#hydro 
+#hydro require=2
 flash
 castro
 maestro
@@ -56,10 +56,15 @@ kelvin-helmholtz
 turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
 shock
 well-balanced
-rotation                NOT: galaxy, cluster, disk, hubble, quantum, spectrum
+rotation                NOT: galaxy, cluster, disk, hubble, quantum, spectrum, asteroid
 rotating                NOT: galaxy, cluster, disk
 fluid dynamics
 CFL
+CFD
+nonlinear
+boundary conditions
+plasma
+simulation
 
 
 #random require=2
@@ -68,6 +73,8 @@ software                NOT: surveys
 python
 open source
 jupyter
+julia
+reproducibility
 
 
 
