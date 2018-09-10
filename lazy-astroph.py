@@ -279,8 +279,8 @@ def slack_post(papers, channel_req, webhook=None):
             if not p.posted_to_slack:
                 if c in p.channels:
                     if len(p.keywords) >= channel_req[c]:
-                        keywds = " ".join(p.keywords).strip()
-                        channel_body += u"{} [{}]\n".format(p, keywds)
+                        keywds = ", ".join(p.keywords).strip()
+                        channel_body += u"_{}_ [{}]\n\n".format(p, keywds)
                         p.posted_to_slack = 1
 
         if webhook is None:
