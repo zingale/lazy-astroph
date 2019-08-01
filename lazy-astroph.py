@@ -152,8 +152,9 @@ class AstrophQuery(object):
             # left off last time.  Note things may not be in id order,
             # so we keep looking through the entire list of returned
             # results.
-            if arxiv_id < old_id:
-                continue
+            if old_id is not None:
+                if arxiv_id < old_id:
+                    continue
 
             # link
             for l in e.links:
