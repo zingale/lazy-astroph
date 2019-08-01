@@ -278,7 +278,7 @@ def run(string):
     return stdout0, stderr0, rc
 
 
-def slack_post(papers, channel_req, webhook=None):
+def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None):
     """ post the information to a slack channel """
 
     # loop by channel
@@ -299,6 +299,10 @@ def slack_post(papers, channel_req, webhook=None):
 
         payload = {}
         payload["channel"] = c
+        if username is not None:
+            payload["username"] = username
+        if icon_emoji is not None:
+            payload["icon_emoji"] = icon_emoji
         payload["text"] = channel_body
 
         cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
@@ -317,7 +321,10 @@ def doit():
                         type=str, nargs=1)
     parser.add_argument("-w", help="file containing slack webhook URL",
                         type=str, default=None)
-
+    parser.add_argument("-u", help="slack username appearing in post",
+                        type=str, default=None)
+    parser.add_argument("-e", help="slack icon_emoji appearing in post",
+                        type=str, default=None)
     args = parser.parse_args()
 
     # get the keywords
@@ -390,7 +397,7 @@ def doit():
     else:
         webhook = None
 
-    slack_post(papers, channel_req, webhook=webhook)
+    slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
 
     try:
         f = open(param_file, "w")
