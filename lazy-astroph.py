@@ -335,7 +335,7 @@ def doit():
             if l == "":
                 continue
 
-            elif l.startswith("#"):
+            elif l.startswith("#") or l.startswith("@"):
                 # this line defines a channel
                 ch = l.split()
                 channel = ch[0]
