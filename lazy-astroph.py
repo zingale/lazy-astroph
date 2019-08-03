@@ -20,11 +20,13 @@ try:
 except ImportError:
     from urllib2 import urlopen
 
+
 class Paper(object):
     """a Paper is a single paper listed on arXiv.  In addition to the
        paper's title, ID, and URL (obtained from arXiv), we also store
        which keywords it matched and which Slack channel it should go
        to"""
+
     def __init__(self, arxiv_id, title, url, keywords, channels):
         self.arxiv_id = arxiv_id
         self.title = title.replace("'", r"")
@@ -50,10 +52,12 @@ class Paper(object):
         else:
             return len(self.keywords) < len(other.keywords)
 
+
 class Keyword(object):
     """a Keyword includes: the text we should match, how the matching
        should be done (unique or any), which words, if present, negate
        the match, and what Slack channel this keyword is associated with"""
+
     def __init__(self, name, matching="any", channel=None, excludes=None):
         self.name = name
         self.matching = matching
@@ -63,6 +67,7 @@ class Keyword(object):
     def __str__(self):
         return "{}: matching={}, channel={}, NOTs={}".format(
             self.name, self.matching, self.channel, self.excludes)
+
 
 class AstrophQuery(object):
     """ a class to define a query to the arXiv astroph papers """
@@ -74,14 +79,15 @@ class AstrophQuery(object):
         self.old_id = old_id
 
         self.base_url = "http://export.arxiv.org/api/query?"
-        self.sort_query = "max_results={}&sortBy=submittedDate&sortOrder=descending".format(self.max_papers)
+        self.sort_query = "max_results={}&sortBy=submittedDate&sortOrder=descending".format(
+            self.max_papers)
 
         self.subcat = ["GA", "CO", "EP", "HE", "IM", "SR"]
 
     def get_cat_query(self):
         """ create the category portion of the astro ph query """
 
-        cat_query = "%28" # open parenthesis
+        cat_query = "%28"  # open parenthesis
         for n, s in enumerate(self.subcat):
             cat_query += "astro-ph.{}".format(s)
             if n < len(self.subcat)-1:
@@ -95,7 +101,8 @@ class AstrophQuery(object):
         """ get the query string for the date range """
 
         # here the 2000 on each date is 8:00pm
-        range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"), self.end_date.strftime("%Y%m%d"))
+        range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"),
+                                                self.end_date.strftime("%Y%m%d"))
         range_query = "lastUpdatedDate:{}".format(range_str)
         return range_query
 
@@ -133,7 +140,7 @@ class AstrophQuery(object):
         for e in feed.entries:
 
             arxiv_id = e.id.split("/abs/")[-1]
-            title = e.title.replace("\n"," ")
+            title = e.title.replace("\n", " ")
 
             # the papers are sorted now such that the first is the
             # most recent -- we want to store this id, so the next
@@ -145,8 +152,9 @@ class AstrophQuery(object):
             # left off last time.  Note things may not be in id order,
             # so we keep looking through the entire list of returned
             # results.
-            if arxiv_id < old_id:
-                continue
+            if old_id is not None:
+                if arxiv_id < old_id:
+                    continue
 
             # link
             for l in e.links:
@@ -171,7 +179,8 @@ class AstrophQuery(object):
                         # we've matched one of the excludes
                         excluded = True
 
-                if excluded: continue
+                if excluded:
+                    continue
 
                 if k.matching == "any":
                     if k.name in abstract.lower().replace("\n", " ") or k.name in title.lower():
@@ -248,7 +257,7 @@ def send_email(papers, mail=None):
     # e-mail it
     if not len(papers) == 0:
         if not mail is None:
-            report(body.encode("ascii","replace"), "astro-ph papers of interest",
+            report(body.encode("ascii", "replace"), "astro-ph papers of interest",
                    "lazy-astroph@localhost <lazy-astroph search>", mail)
         else:
             print(body)
@@ -269,7 +278,7 @@ def run(string):
     return stdout0, stderr0, rc
 
 
-def slack_post(papers, channel_req, webhook=None):
+def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None):
     """ post the information to a slack channel """
 
     # loop by channel
@@ -290,10 +299,15 @@ def slack_post(papers, channel_req, webhook=None):
 
         payload = {}
         payload["channel"] = c
+        if username is not None:
+            payload["username"] = username
+        if icon_emoji is not None:
+            payload["icon_emoji"] = icon_emoji
         payload["text"] = channel_body
 
         cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
         so = run(cmd)
+
 
 def doit():
     """ the main driver for the lazy-astroph script """
@@ -307,7 +321,10 @@ def doit():
                         type=str, nargs=1)
     parser.add_argument("-w", help="file containing slack webhook URL",
                         type=str, default=None)
-
+    parser.add_argument("-u", help="slack username appearing in post",
+                        type=str, default=None)
+    parser.add_argument("-e", help="slack icon_emoji appearing in post",
+                        type=str, default=None)
     args = parser.parse_args()
 
     # get the keywords
@@ -325,7 +342,7 @@ def doit():
             if l == "":
                 continue
 
-            elif l.startswith("#"):
+            elif l.startswith("#") or l.startswith("@"):
                 # this line defines a channel
                 ch = l.split()
                 channel = ch[0]
@@ -354,7 +371,6 @@ def doit():
                 keywords.append(Keyword(kw, matching=matching,
                                         channel=channel, excludes=excludes))
 
-
     # have we done this before? if so, read the .lazy_astroph file to get
     # the id of the paper we left off with
     param_file = os.path.expanduser("~") + "/.lazy_astroph"
@@ -381,7 +397,7 @@ def doit():
     else:
         webhook = None
 
-    slack_post(papers, channel_req, webhook=webhook)
+    slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
 
     try:
         f = open(param_file, "w")
