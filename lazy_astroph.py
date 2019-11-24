@@ -257,7 +257,7 @@ def send_email(papers, mail=None):
     # e-mail it
     if not len(papers) == 0:
         if not mail is None:
-            report(body.encode("ascii", "replace"), "astro-ph papers of interest",
+            report(body, "astro-ph papers of interest",
                    "lazy-astroph@localhost <lazy-astroph search>", mail)
         else:
             print(body)
