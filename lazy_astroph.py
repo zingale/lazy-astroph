@@ -6,6 +6,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import platform
 import shlex
 import smtplib
 import subprocess
@@ -202,6 +203,7 @@ class AstrophQuery:
 
 def report(body, subject, sender, receiver):
     """ send an email """
+
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = sender
@@ -258,7 +260,7 @@ def send_email(papers, mail=None):
     if not len(papers) == 0:
         if not mail is None:
             report(body, "astro-ph papers of interest",
-                   "lazy-astroph@localhost <lazy-astroph search>", mail)
+                   "lazy-astroph@{}".format(platform.node()), mail)
         else:
             print(body)
 
