@@ -7,6 +7,8 @@ slack channels using web-hooks.  This way if we forget to read
 astro-ph for a bit, we can atleast get notified of the papers deemed
 important to us (and discuss them on slack).
 
+Note: this requires python 3
+
 ## usage
 
 ```
