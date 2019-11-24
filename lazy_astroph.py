@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -21,7 +21,7 @@ except ImportError:
     from urllib2 import urlopen
 
 
-class Paper(object):
+class Paper:
     """a Paper is a single paper listed on arXiv.  In addition to the
        paper's title, ID, and URL (obtained from arXiv), we also store
        which keywords it matched and which Slack channel it should go
@@ -49,11 +49,11 @@ class Paper(object):
 
         if len(self.keywords) == len(other.keywords):
             return self.kw_str() < other.kw_str()
-        else:
-            return len(self.keywords) < len(other.keywords)
+
+        return len(self.keywords) < len(other.keywords)
 
 
-class Keyword(object):
+class Keyword:
     """a Keyword includes: the text we should match, how the matching
        should be done (unique or any), which words, if present, negate
        the match, and what Slack channel this keyword is associated with"""
@@ -69,7 +69,7 @@ class Keyword(object):
             self.name, self.matching, self.channel, self.excludes)
 
 
-class AstrophQuery(object):
+class AstrophQuery:
     """ a class to define a query to the arXiv astroph papers """
 
     def __init__(self, start_date, end_date, max_papers, old_id=None):
@@ -194,7 +194,7 @@ class AstrophQuery(object):
                         keys_matched.append(k.name)
                         channels.append(k.channel)
 
-            if len(keys_matched) > 0:
+            if keys_matched:
                 results.append(Paper(arxiv_id, title, url, keys_matched, channels))
 
         return results, latest_id
@@ -306,8 +306,9 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
         payload["text"] = channel_body
 
         cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
-        so = run(cmd)
+        run(cmd)
 
+    sys.exit("done")
 
 def doit():
     """ the main driver for the lazy-astroph script """
@@ -325,6 +326,9 @@ def doit():
                         type=str, default=None)
     parser.add_argument("-e", help="slack icon_emoji appearing in post",
                         type=str, default=None)
+    parser.add_argument("--dry_run",
+                        help="don't send any mail or slack posts and don't update the marker where we left off",
+                        action="store_true")
     args = parser.parse_args()
 
     # get the keywords
@@ -384,29 +388,31 @@ def doit():
 
     papers, last_id = search_astroph(keywords, old_id=old_id)
 
-    send_email(papers, mail=args.m)
+    if not args.dry_run:
+        send_email(papers, mail=args.m)
 
-    if not args.w is None:
+        if not args.w is None:
+            try:
+                f = open(args.w)
+            except:
+                sys.exit("ERROR: unable to open webhook file")
+
+            webhook = str(f.readline())
+            f.close()
+        else:
+            webhook = None
+
+        slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
+
         try:
-            f = open(args.w)
+            f = open(param_file, "w")
         except:
-            sys.exit("ERROR: unable to open webhook file")
-
-        webhook = str(f.readline())
-        f.close()
+            sys.exit("ERROR: unable to open parameter file for writting")
+        else:
+            f.write(last_id)
+            f.close()
     else:
-        webhook = None
-
-    slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
-
-    try:
-        f = open(param_file, "w")
-    except:
-        sys.exit("ERROR: unable to open parameter file for writting")
-    else:
-        f.write(last_id)
-        f.close()
-
+        send_email(papers, mail=None)
 
 if __name__ == "__main__":
     doit()
