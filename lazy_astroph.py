@@ -296,7 +296,6 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
 
         if webhook is None:
             print("channel: {}".format(c))
-            print(channel_body)
             continue
 
         payload = {}
@@ -309,8 +308,6 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
 
         cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
         run(cmd)
-
-    sys.exit("done")
 
 def doit():
     """ the main driver for the lazy-astroph script """
@@ -405,6 +402,8 @@ def doit():
             webhook = None
 
         slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
+
+        print("writing param_file", param_file)
 
         try:
             f = open(param_file, "w")
