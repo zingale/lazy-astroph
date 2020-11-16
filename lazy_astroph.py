@@ -126,8 +126,8 @@ class AstrophQuery:
 
         # this feedparser magic comes from the example of Julius Lucks / Andrea Zonca
         # https://github.com/zonca/python-parse-arxiv/blob/master/python_arXiv_parsing_example.py
-        feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-        feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+        #feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+        #feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
         feed = feedparser.parse(response)
 
