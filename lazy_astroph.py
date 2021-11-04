@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 
 import argparse
 import datetime as dt
@@ -38,7 +37,7 @@ class Paper:
 
     def __str__(self):
         t = " ".join(self.title.split())  # remove extra spaces
-        return u"{} : {}\n  {}\n".format(self.arxiv_id, t, self.url)
+        return f"{self.arxiv_id} : {t}\n  {self.url}\n"
 
     def kw_str(self):
         """ return the union of keywords """
@@ -90,7 +89,7 @@ class AstrophQuery:
 
         cat_query = "%28"  # open parenthesis
         for n, s in enumerate(self.subcat):
-            cat_query += "astro-ph.{}".format(s)
+            cat_query += f"astro-ph.{s}"
             if n < len(self.subcat)-1:
                 cat_query += "+OR+"
             else:
@@ -104,7 +103,7 @@ class AstrophQuery:
         # here the 2000 on each date is 8:00pm
         range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"),
                                                 self.end_date.strftime("%Y%m%d"))
-        range_query = "lastUpdatedDate:{}".format(range_str)
+        range_query = f"lastUpdatedDate:{range_str}"
         return range_query
 
     def get_url(self):
@@ -113,7 +112,7 @@ class AstrophQuery:
         cat_query = self.get_cat_query()
         range_query = self.get_range_query()
 
-        full_query = "search_query={}+AND+{}&{}".format(cat_query, range_query, self.sort_query)
+        full_query = f"search_query={cat_query}+AND+{range_query}&{self.sort_query}"
 
         return self.base_url + full_query
 
@@ -252,15 +251,15 @@ def send_email(papers, mail=None):
     for p in papers:
         if not p.kw_str() == current_kw:
             current_kw = p.kw_str()
-            body += "\nkeywords: {}\n\n".format(current_kw)
+            body += f"\nkeywords: {current_kw}\n\n"
 
-        body += u"{}\n".format(p)
+        body += f"{p}\n"
 
     # e-mail it
     if not len(papers) == 0:
         if not mail is None:
             report(body, "astro-ph papers of interest",
-                   "lazy-astroph@{}".format(platform.node()), mail)
+                   f"lazy-astroph@{platform.node()}", mail)
         else:
             print(body)
 
@@ -291,11 +290,11 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
                 if c in p.channels:
                     if len(p.keywords) >= channel_req[c]:
                         keywds = ", ".join(p.keywords).strip()
-                        channel_body += u"{} [{}]\n\n".format(p, keywds)
+                        channel_body += f"{p} [{keywds}]\n\n"
                         p.posted_to_slack = 1
 
         if webhook is None:
-            print("channel: {}".format(c))
+            print(f"channel: {c}")
             continue
 
         payload = {}
@@ -306,7 +305,7 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
             payload["icon_emoji"] = icon_emoji
         payload["text"] = channel_body
 
-        cmd = "curl -X POST --data-urlencode 'payload={}' {}".format(json.dumps(payload), webhook)
+        cmd = f"curl -X POST --data-urlencode 'payload={json.dumps(payload)}' {webhook}"
         run(cmd)
 
 def doit():
@@ -333,7 +332,7 @@ def doit():
     # get the keywords
     keywords = []
     try:
-        f = open(args.inputs[0], "r")
+        f = open(args.inputs[0])
     except:
         sys.exit("ERROR: unable to open inputs file")
     else:
@@ -378,7 +377,7 @@ def doit():
     # the id of the paper we left off with
     param_file = os.path.expanduser("~") + "/.lazy_astroph"
     try:
-        f = open(param_file, "r")
+        f = open(param_file)
     except:
         old_id = None
     else:
