@@ -65,8 +65,7 @@ class Keyword:
         self.excludes = list(set(excludes))
 
     def __str__(self):
-        return "{}: matching={}, channel={}, NOTs={}".format(
-            self.name, self.matching, self.channel, self.excludes)
+        return f"{self.name}: matching={self.matching}, channel={self.channel}, NOTs={self.excludes}"
 
 
 class AstrophQuery:
@@ -79,8 +78,7 @@ class AstrophQuery:
         self.old_id = old_id
 
         self.base_url = "http://export.arxiv.org/api/query?"
-        self.sort_query = "max_results={}&sortBy=submittedDate&sortOrder=descending".format(
-            self.max_papers)
+        self.sort_query = f"max_results={self.max_papers}&sortBy=submittedDate&sortOrder=descending"
 
         self.subcat = ["GA", "CO", "EP", "HE", "IM", "SR"]
 
@@ -101,8 +99,9 @@ class AstrophQuery:
         """ get the query string for the date range """
 
         # here the 2000 on each date is 8:00pm
-        range_str = "[{}2000+TO+{}2000]".format(self.start_date.strftime("%Y%m%d"),
-                                                self.end_date.strftime("%Y%m%d"))
+        start = self.start_date.strftime("%Y%m%d")
+        end = self.end_date.strftime("%Y%m%d")
+        range_str = f"[{start}2000+TO+{end}2000]"
         range_query = f"lastUpdatedDate:{range_str}"
         return range_query
 
