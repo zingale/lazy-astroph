@@ -1,4 +1,4 @@
-# about lazy-astroph.py
+# about lazy_astroph.py
 
 This is a simple script to get the latest papers from astro-ph/arxiv,
 search their abstracts and titles for keywords, and report the
@@ -12,7 +12,7 @@ Note: this requires python 3
 ## usage
 
 ```
-./lazy-astroph.py [-m e-mail-address] [-w slack-webhook-file] inputs
+./lazy_astroph.py [-m e-mail-address] [-w slack-webhook-file] inputs
 ```
 
 where `inputs` is a file of (case-insensitive) keywords, one per
@@ -42,13 +42,13 @@ we must match before posting a paper to a slack channel.
 
 You need to create a webhook via slack.  Put the URL into a file
 (just the URL, nothing else) and then pass the name of that
-file into `lazy-astroph.py` using the `-w` parameter.
+file into `lazy_astroph.py` using the `-w` parameter.
 
 
 ## automating
 
 To have this run nightly, add a line to your crontab.  Assuming that
-you've put the `lazy-astroph.py` script and an `inputs` file in your
+you've put the `lazy_astroph.py` script and an `inputs` file in your
 ~/bin/, then do something like:
 
 ```
@@ -58,7 +58,7 @@ crontab -e
 add a new line with:
 
 ```
-00 04 * * * /home/username/bin/lazy-astroph.py -m me@something.edu /home/username/bin/inputs
+00 04 * * * /home/username/bin/lazy_astroph.py -m me@something.edu /home/username/bin/inputs
 ```
 
 replacing the e-mail with your e-mail and `username` with your username.
