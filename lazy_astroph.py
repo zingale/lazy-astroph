@@ -10,6 +10,7 @@ import shlex
 import smtplib
 import subprocess
 import sys
+from collections import defaultdict
 from email.mime.text import MIMEText
 
 import feedparser
@@ -27,12 +28,14 @@ class Paper:
        which keywords it matched and which Slack channel it should go
        to"""
 
-    def __init__(self, arxiv_id, title, url, keywords, channels):
+    def __init__(self, arxiv_id, title, url, keywords_by_channel):
         self.arxiv_id = arxiv_id
         self.title = title.replace("'", r"")
         self.url = url
-        self.keywords = list(keywords)
-        self.channels = list(set(channels))
+        self.keywords_by_channel = keywords_by_channel
+        self.keywords = []
+        for kws in keywords_by_channel.values():
+            self.keywords.extend(kws)
         self.posted_to_slack = 0
 
     def __str__(self):
@@ -168,8 +171,7 @@ class AstrophQuery:
             # it has "unique", then we want to make sure only that word matches,
             # i.e., "nova" and not "supernova".  If any of the exclude words associated
             # with the keyword are present, then we reject any match
-            keys_matched = []
-            channels = []
+            keys_matched = defaultdict(list)
             for k in keywords:
                 # first check the "NOT"s
                 excluded = False
@@ -183,18 +185,16 @@ class AstrophQuery:
 
                 if k.matching == "any":
                     if k.name in abstract.lower().replace("\n", " ") or k.name in title.lower():
-                        keys_matched.append(k.name)
-                        channels.append(k.channel)
+                        keys_matched[k.channel].append(k.name)
 
                 elif k.matching == "unique":
                     qa = [l.lower().strip('\":.,!?') for l in abstract.split()]
                     qt = [l.lower().strip('\":.,!?') for l in title.split()]
                     if k.name in qa + qt:
-                        keys_matched.append(k.name)
-                        channels.append(k.channel)
+                        keys_matched[k.channel].append(k.name)
 
             if keys_matched:
-                results.append(Paper(arxiv_id, title, url, keys_matched, channels))
+                results.append(Paper(arxiv_id, title, url, dict(keys_matched)))
 
         return results, latest_id
 
@@ -286,8 +286,8 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
         channel_body = ""
         for p in papers:
             if not p.posted_to_slack:
-                if c in p.channels:
-                    if len(p.keywords) >= channel_req[c]:
+                if c in p.keywords_by_channel:
+                    if len(p.keywords_by_channel[c]) >= channel_req[c]:
                         keywds = ", ".join(p.keywords).strip()
                         channel_body += f"{p} [{keywds}]\n\n"
                         p.posted_to_slack = 1
