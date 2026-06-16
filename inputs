@@ -42,7 +42,7 @@ KNL
 
 #hydro require=2
 flash
-castro
+castro-
 maestro
 hydro                   NOT: galaxy, galaxies, cosmology, large scale structure, large-scale structure, dust, cloud, interstellar medium, ISM, interstellar, jets, general relativity, general relativistic, hydrogen, hydrostatic, Lyman
 magnetohydrodynamics
@@ -80,6 +80,11 @@ jupyter
 julia
 reproducibility
 
+#ml
+machine learning
+neural network
 
-
-
+# microphysics
+pynucastro
+equation of state
+reaction network

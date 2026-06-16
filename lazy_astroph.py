@@ -212,7 +212,8 @@ def report(body, subject, sender, receiver):
         sm.sendmail(sender, receiver, msg.as_string())
     except smtplib.SMTPException:
         sys.exit("ERROR sending mail")
-
+    except ConnectionRefusedError:
+        print("email connection refused")
 
 def search_astroph(keywords, old_id=None):
     """ do the actual search though astro-ph by first querying astro-ph
