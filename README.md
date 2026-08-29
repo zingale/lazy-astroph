@@ -3,7 +3,7 @@
 This is a simple script to get the latest papers from astro-ph/arxiv,
 search their abstracts and titles for keywords, and report the
 results.  Reports are done either through e-mail or by posting to
-slack channels using web-hooks.  This way if we forget to read
+slack/discord channels using web-hooks.  This way if we forget to read
 astro-ph for a bit, we can atleast get notified of the papers deemed
 important to us (and discuss them on slack).
 
@@ -12,7 +12,7 @@ Note: this requires python 3
 ## usage
 
 ```
-./lazy_astroph.py [-m e-mail-address] [-w slack-webhook-file] inputs
+./lazy_astroph.py [-m e-mail-address] [-w webhook-file] inputs
 ```
 
 where `inputs` is a file of (case-insensitive) keywords, one per
@@ -36,13 +36,15 @@ they don't also contain "dark energy", "interstellar medium", or
 "supernova" (since `"nova" in "supernova"` is `True` in python).
 And it will return those papers containing xrb.
 
-Slack channels are indicated by a line beginning with "#", with
-an optional "requires=N", where N is the number of keywords
-we must match before posting a paper to a slack channel.
+Slack/Discord channels are indicated by a line beginning with "#",
+with an optional "requires=N", where N is the number of keywords
+we must match before posting a paper to a channel.
+Discord channels must be specified using their channel ID, not
+the channel name.
 
-You need to create a webhook via slack.  Put the URL into a file
-(just the URL, nothing else) and then pass the name of that
-file into `lazy_astroph.py` using the `-w` parameter.
+You need to create a webhook via slack or discord.  Put the URL
+into a file (just the URLs, nothing else) and then pass the name
+of that file into `lazy_astroph.py` using the `-w` parameter.
 
 
 ## automating

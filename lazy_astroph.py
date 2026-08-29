@@ -36,7 +36,7 @@ class Paper:
         self.keywords = []
         for kws in keywords_by_channel.values():
             self.keywords.extend(kws)
-        self.posted_to_slack = 0
+        self.posted_to_channel = 0
 
     def __str__(self):
         t = " ".join(self.title.split())  # remove extra spaces
@@ -279,6 +279,36 @@ def run(string):
     return stdout0, stderr0, rc
 
 
+def get_channel_id_from_webhook(webhook_url, bot_token=None):
+    from discord import SyncWebhook
+    import requests
+
+    # Fetch webhook details
+    response = requests.get(webhook_url)
+
+    if response.status_code == 200:
+        webhook_data = response.json()
+        channel_id = webhook_data.get("channel_id")
+
+        if bot_token and channel_id:
+            # Use the bot token to fetch channel details
+            headers = {"Authorization": f"Bot {bot_token}"}
+            channel_response = requests.get(f"https://discord.com/api/v10/channels/{channel_id}", headers=headers)
+
+            if channel_response.status_code == 200:
+                channel_data = channel_response.json()
+                return channel_data.get("name")
+            else:
+                print(f"Failed to fetch channel details: {channel_response.status_code}")
+        else:
+            print(f"Channel ID: {channel_id} (Use a bot token to resolve the channel name)")
+            return channel_id
+    else:
+        print(f"Failed to fetch webhook details: {response.status_code}")
+
+    return None
+
+
 def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None):
     """ post the information to a slack channel """
 
@@ -286,12 +316,12 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
     for c in channel_req:
         channel_body = ""
         for p in papers:
-            if not p.posted_to_slack:
+            if not p.posted_to_channel:
                 if c in p.keywords_by_channel:
                     if len(p.keywords_by_channel[c]) >= channel_req[c]:
                         keywds = ", ".join(p.keywords).strip()
                         channel_body += f"{p} [{keywds}]\n\n"
-                        p.posted_to_slack = 1
+                        p.posted_to_channel = 1
 
         if webhook is None:
             print(f"channel: {c}")
@@ -308,6 +338,45 @@ def slack_post(papers, channel_req, username=None, icon_emoji=None, webhook=None
         cmd = f"curl -X POST --data-urlencode 'payload={json.dumps(payload)}' {webhook}"
         run(cmd)
 
+
+def discord_post(papers, channel_req, username=None):
+    """ post the information to discord channels"""
+
+    # loop by channel
+    for c, value in channel_req.items():
+        if isinstance(value,tuple) and len(value) > 1:
+            req, wh = value
+        else:
+            req = value
+            wh = None
+
+        if not wh is None:
+            webhook = SyncWebhook.from_url(wh)
+
+        channel_body = ""
+        for p in papers:
+            if not p.posted_to_channel:
+                if c in p.keywords_by_channel:
+                    if len(p.keywords_by_channel[c]) >= req:
+                        keywds = ", ".join(p.keywords).strip()
+                        channel_body1 = f"{p} [{keywds}]\n\n"
+                        if not wh is None:
+                            if len(channel_body + channel_body1) > 2000:
+                                webhook.send(channel_body, username=username)
+                                channel_body = ""
+                        channel_body += channel_body1
+                        p.posted_to_channel = 1
+
+        if len(channel_body) > 0:
+            if wh is None:
+                print(f"channel: {c}")
+                print(channel_body)
+            else:
+                webhook.send(channel_body, username=username)
+
+        #cmd = f"curl -X POST --data-urlencode 'payload={json.dumps(payload)}' {wh}"
+        #run(cmd)
+
 def doit():
     """ the main driver for the lazy-astroph script """
 
@@ -318,16 +387,33 @@ def doit():
                         type=str, default=None)
     parser.add_argument("inputs", help="inputs file containing keywords",
                         type=str, nargs=1)
-    parser.add_argument("-w", help="file containing slack webhook URL",
+    parser.add_argument("-w", help="file containing webhook URL for slack or list of webhook URLs for discord",
                         type=str, default=None)
-    parser.add_argument("-u", help="slack username appearing in post",
+    parser.add_argument("-u", help="username appearing in post",
                         type=str, default=None)
-    parser.add_argument("-e", help="slack icon_emoji appearing in post",
+    parser.add_argument("-e", help="icon_emoji appearing in post (slack only)",
                         type=str, default=None)
+    parser.add_argument("--slack_api", help="use slack API for webhooks",
+                        action="store_true", default=False)
+    parser.add_argument("--discord_api", help="use discord API for webhooks",
+                        action="store_true", default=False)
     parser.add_argument("--dry_run",
-                        help="don't send any mail or slack posts and don't update the marker where we left off",
+                        help="don't send any mail or slack/discord posts and don't update the marker where we left off",
                         action="store_true")
     args = parser.parse_args()
+
+    # logic to enforce constraints
+    if args.w:
+        # if `-w` is specified, enforce that exactly one API is selected
+        if args.slack_api and args.discord_api:
+            sys.exit("Error: You cannot specify both --slack_api and --discord_api")
+        elif not args.slack_api and not args.discord_api:
+            # default to `slack_api = True` if neither is specified
+            args.slack_api = True
+    else:
+        # if `-w` is not specified, set both APIs to False
+        args.slack_api = False
+        args.discord_api = False
 
     # get the keywords
     keywords = []
@@ -348,6 +434,8 @@ def doit():
                 # this line defines a channel
                 ch = l.split()
                 channel = ch[0]
+                if args.discord_api:
+                    channel = channel[1:]
                 if len(ch) == 2:
                     requires = int(ch[1].split("=")[1])
                 else:
@@ -395,12 +483,33 @@ def doit():
             except:
                 sys.exit("ERROR: unable to open webhook file")
 
-            webhook = str(f.readline())
+            if args.discord_api:
+                # Discord needs a separate webhook for each channel in a server
+                # Read the webhook URLs, get channel IDs, and match them to channel IDs in inputs
+                for line in f:
+                    l = line.rstrip()
+                    if l == "":
+                        continue
+                    else:
+                        wh = l.split()
+                        webhook = wh[0]
+                        ch = get_channel_id_from_webhook(webhook)
+                        if ch in channel_req:
+                            r = channel_req[ch]
+                            channel_req[ch] = (r,webhook)
+
+                else:
+                    # Slack uses only one webhook for the workspace
+                    webhook = str(f.readline())
+
             f.close()
         else:
             webhook = None
 
-        slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
+        if args.disord_api:
+            discord_post(papers, channel_req, username=args.u)
+        elif args.slack_api:
+            slack_post(papers, channel_req, icon_emoji=args.e, username=args.u, webhook=webhook)
 
         print("writing param_file", param_file)
 

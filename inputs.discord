@@ -1,0 +1,102 @@
+#1316121062886608957 require=2 
+SNIa
+SN Ia
+SNe Ia
+supernova               NOT: dark energy, interstellar medium, ISM, redshift, cosmic microwave, CMB, cosmology, cosmologies, ccsn, core-collapse
+type Ia supernova
+Chandrasekhar
+degenerate              NOT: CMB, lensing, doped
+white dwarf
+flame
+deflagration
+detonation
+helium detonation
+thermonuclear
+double degenerate
+WD merger
+
+#1316522331224670228 require=2 
+CCSN
+CCSNe
+supernova               NOT: dark energy, interstellar medium, ISM, redshift, cosmic microwave, CMB, cosmology, cosmologies, thermonuclear
+progenitor              NOT: asteroid, basaltic, jupiter, white dwarf
+core-collapse
+central engine
+explosion mechanism
+spectral neutrino
+neutrino transport
+radiation hydrodynamics NOT: photon
+gravitational collapse
+proto-neutron star
+proto neutron star
+PNS
+hypernova
+hypernovae
+SASI
+accretion shock
+
+#1316583710229008460 require=2
+hydro                   NOT: galaxy, galaxies, cosmology, large scale structure, large-scale structure, dust, cloud, interstellar medium, ISM, interstellar, jets, hydrogen, hydrostatic, Lyman
+flash
+flash-x
+castro
+maestro
+fornax
+athena
+gr1d
+asterx
+gram-x
+magnetohydrodynamics
+MHD
+GRMHD
+adaptive mesh refinement
+AMR
+radiation hydrodynamics
+turbulence              NOT: cluster, interstellar, cloud, galactic, nebula, adaptive optics, seeing, guide star, molecular, disks, dust
+shock
+discontinuous galerkin
+reconstruction
+riemann
+
+#1316872902934663238 require=2
+microphysics
+nuclear equation of state
+thornado
+weaklib
+nulib
+stellarcollapse
+xnet
+winnet
+skynet
+torch                   NOT: pytorch
+reaclib
+reaction network
+nuclear burning
+reaction kinetics
+qse
+neutrino opacity
+neutrino opacities
+tabulated
+
+#1316869734381260887 require=2
+hpc
+gpu
+computational cost
+performance portability
+roofline model
+CUDA
+kokkos
+raja
+openacc
+openmp offload
+openmp target
+risc-v
+neural network
+machine learning
+artificial intelligence
+pytorch
+
+
+
+
+
